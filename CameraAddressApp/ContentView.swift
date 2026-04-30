@@ -97,7 +97,7 @@ struct ContentView: View {
                 .background(Color.black)
 
                 // Ad banner
-                BannerAdView(adUnitID: "ca-app-pub-9404799280370656/PLACEHOLDER")
+                BannerAdView(adUnitID: "ca-app-pub-9404799280370656/7882448349")
                     .frame(height: 50)
                     .background(Color.black)
             }
