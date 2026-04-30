@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>CameraAddress</string>
+    <key>CFBundleDisplayName</key>
+    <string>CameraAddress</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <key>NSCameraUsageDescription</key>
+    <string>カメラで撮影した写真に住所を重ねて保存します</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>現在地の住所を表示するために位置情報を使用します</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>住所入り写真をフォトライブラリに保存します</string>
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-9404799280370656~PLACEHOLDER</string>
+    <key>NSUserTrackingUsageDescription</key>
+    <string>パーソナライズ広告のためにデータを使用します</string>
+</dict>
+</plist>
