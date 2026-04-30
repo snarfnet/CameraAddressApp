@@ -88,6 +88,17 @@ r = api('PATCH', f'/appStoreVersions/{version_id}/relationships/build',
     json={'data': {'type': 'builds', 'id': build_id}})
 print(f'Build assigned: {r.status_code}')
 
+# Cancel any blocking reviewSubmissions
+r = api('GET', f'/apps/{APP_ID}/reviewSubmissions?filter[state]=UNRESOLVED_ISSUES,READY_FOR_REVIEW')
+if r.status_code == 200:
+    for sub in r.json().get('data', []):
+        sid = sub['id']
+        st = sub['attributes']['state']
+        print(f'Canceling stale reviewSubmission {sid} state={st}')
+        api('PATCH', f'/reviewSubmissions/{sid}', json={
+            'data': {'type': 'reviewSubmissions', 'id': sid, 'attributes': {'canceled': True}}
+        })
+
 # Submit via reviewSubmissions API
 r = api('POST', '/reviewSubmissions', json={
     'data': {
