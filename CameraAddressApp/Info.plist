@@ -22,8 +22,15 @@
     <string>$(MARKETING_VERSION)</string>
     <key>CFBundleIconName</key>
     <string>AppIcon</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
     <key>UILaunchScreen</key>
     <dict/>
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+    </dict>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
