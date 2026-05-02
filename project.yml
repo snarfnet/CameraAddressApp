@@ -36,5 +36,3 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         DEVELOPMENT_TEAM: 83VGKGSQUH
         CODE_SIGN_STYLE: Automatic
-    info:
-      path: CameraAddressApp/Info.plist
