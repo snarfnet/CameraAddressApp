@@ -81,7 +81,7 @@ jobs:
           -authenticationKeyID WDXGY9WX55 \
           -authenticationKeyIssuerID 2be0734f-943a-4d61-9dc9-5d9045c46fec
 
-    - name: Export IPA
+    - name: Export IPA (local, no upload)
       run: |
         xcodebuild -exportArchive \
           -archivePath build/CameraAddressApp.xcarchive \
@@ -91,6 +91,18 @@ jobs:
           -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8 \
           -authenticationKeyID WDXGY9WX55 \
           -authenticationKeyIssuerID 2be0734f-943a-4d61-9dc9-5d9045c46fec
+        echo "IPA exported:"
+        ls -la build/export/*.ipa
+
+    - name: Upload IPA via xcrun notarytool/altool
+      run: |
+        xcrun altool --upload-app \
+          -f build/export/CameraAddressApp.ipa \
+          -t ios \
+          --apiKey WDXGY9WX55 \
+          --apiIssuer 2be0734f-943a-4d61-9dc9-5d9045c46fec \
+          --verbose 2>&1 || true
+        echo "--- Upload complete, checking for errors ---"
 
     - name: Install PyJWT
       run: pip3 install --break-system-packages PyJWT requests
