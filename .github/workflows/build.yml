@@ -37,6 +37,54 @@ jobs:
     - name: Generate Xcode project
       run: xcodegen generate
 
+    - name: Take Simulator Screenshots
+      run: |
+        set -e
+        echo "=== Building for simulator ==="
+        xcodebuild build \
+          -scheme CameraAddressApp \
+          -configuration Debug \
+          -destination "platform=iOS Simulator,name=iPhone 15 Plus" \
+          -derivedDataPath build/sim \
+          CODE_SIGNING_ALLOWED=NO \
+          2>&1 | grep -E "error:|Build succeeded|Build FAILED" | tail -20
+
+        APP_PATH=$(find build/sim -name "CameraAddressApp.app" -not -path "*/PlugIns/*" | head -1)
+        echo "App: $APP_PATH"
+        mkdir -p screenshots
+
+        take_screenshots() {
+          local DEVICE_NAME="$1"
+          local PREFIX="$2"
+          local SIM_ID=$(xcrun simctl list devices available | grep "\"${DEVICE_NAME}\"" | grep -oE '[A-F0-9-]{36}' | head -1)
+          if [ -z "$SIM_ID" ]; then
+            echo "No simulator for $DEVICE_NAME, skipping"
+            return
+          fi
+          echo "--- $DEVICE_NAME ($SIM_ID) ---"
+          xcrun simctl boot "$SIM_ID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_ID" -b
+          xcrun simctl privacy "$SIM_ID" grant camera com.tokyonasu.CameraAddressApp 2>/dev/null || true
+          xcrun simctl privacy "$SIM_ID" grant location-always com.tokyonasu.CameraAddressApp 2>/dev/null || true
+          xcrun simctl install "$SIM_ID" "$APP_PATH"
+          xcrun simctl launch "$SIM_ID" com.tokyonasu.CameraAddressApp
+          sleep 7
+          xcrun simctl io "$SIM_ID" screenshot "screenshots/${PREFIX}_1.png"
+          sleep 3
+          xcrun simctl io "$SIM_ID" screenshot "screenshots/${PREFIX}_2.png"
+          sleep 3
+          xcrun simctl io "$SIM_ID" screenshot "screenshots/${PREFIX}_3.png"
+          xcrun simctl terminate "$SIM_ID" com.tokyonasu.CameraAddressApp 2>/dev/null || true
+          xcrun simctl shutdown "$SIM_ID" || true
+          echo "Screenshots for $DEVICE_NAME done"
+        }
+
+        take_screenshots "iPhone 15 Plus" "screen_67"
+        take_screenshots "iPhone 11 Pro Max" "screen_65"
+
+        echo "=== Screenshots taken ==="
+        ls -la screenshots/
+
     - name: Import Distribution Certificate
       env:
         CERT_BASE64: ${{ secrets.DIST_CERT_BASE64 }}
@@ -58,7 +106,6 @@ jobs:
       run: |
         mkdir -p ~/.appstoreconnect/private_keys
         echo "$ASC_API_KEY_CONTENT" | base64 -D > ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8
-        cp ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8 /tmp/asc_key.p8
 
     - name: Build Archive
       run: |
@@ -74,7 +121,7 @@ jobs:
           -authenticationKeyID WDXGY9WX55 \
           -authenticationKeyIssuerID 2be0734f-943a-4d61-9dc9-5d9045c46fec
 
-    - name: Export IPA (local, no upload)
+    - name: Export IPA
       run: |
         xcodebuild -exportArchive \
           -archivePath build/CameraAddressApp.xcarchive \
@@ -84,10 +131,9 @@ jobs:
           -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8 \
           -authenticationKeyID WDXGY9WX55 \
           -authenticationKeyIssuerID 2be0734f-943a-4d61-9dc9-5d9045c46fec
-        echo "IPA exported:"
         ls -la build/export/*.ipa
 
-    - name: Upload IPA via xcrun notarytool/altool
+    - name: Upload IPA via altool
       run: |
         xcrun altool --upload-app \
           -f build/export/CameraAddressApp.ipa \
@@ -95,10 +141,12 @@ jobs:
           --apiKey WDXGY9WX55 \
           --apiIssuer 2be0734f-943a-4d61-9dc9-5d9045c46fec \
           --verbose 2>&1 || true
-        echo "--- Upload complete, checking for errors ---"
 
     - name: Install PyJWT
       run: pip3 install --break-system-packages PyJWT requests
+
+    - name: Upload Screenshots to ASC
+      run: python3 scripts/upload_screenshots.py
 
     - name: Submit for Review
       run: python3 scripts/submit.py ${{ env.BUILD_NUM }}
