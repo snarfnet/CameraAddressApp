@@ -14,7 +14,7 @@ APP_ID = '6764717589'
 
 def get_version_localizations():
     """Get current version's localizations dynamically"""
-    r = requests.get(f'https://api.appstoreconnect.apple.com/v1/apps/{APP_ID}/appStoreVersions?filter[appStoreState]=READY_FOR_DISTRIBUTION,PREPARE_FOR_SUBMISSION,REJECTED,DEVELOPER_REJECTED&include=appStoreVersionLocalizations', headers=h())
+    r = requests.get(f'https://api.appstoreconnect.apple.com/v1/apps/{APP_ID}/appStoreVersions?filter[platform]=IOS&limit=1', headers=h())
     if r.status_code != 200:
         print(f'Failed to get versions: {r.status_code} {r.text[:200]}')
         return {}
