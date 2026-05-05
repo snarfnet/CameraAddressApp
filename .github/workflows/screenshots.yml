@@ -1,0 +1,86 @@
+name: Take Screenshots and Upload
+
+on:
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Select Xcode
+      run: |
+        XCODE_APP=$(ls /Applications/ | grep "^Xcode_" | sort -V | tail -1)
+        sudo xcode-select -s "/Applications/$XCODE_APP"
+        xcodebuild -version
+
+    - name: Install XcodeGen
+      run: brew install xcodegen
+
+    - name: Generate Xcode project
+      run: xcodegen generate
+
+    - name: Build for Simulator (iPhone 15 Pro)
+      run: |
+        xcodebuild build \
+          -scheme CameraAddressApp \
+          -configuration Debug \
+          -destination "platform=iOS Simulator,name=iPhone 15 Pro" \
+          -derivedDataPath build/derived \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Take 6.1-inch screenshots (iPhone 15 Pro)
+      run: |
+        xcrun simctl boot "iPhone 15 Pro" || true
+        sleep 3
+        # Set appearance to light mode
+        xcrun simctl ui "iPhone 15 Pro" appearance light
+        xcrun simctl install "iPhone 15 Pro" build/derived/Build/Products/Debug-iphonesimulator/CameraAddressApp.app
+        xcrun simctl launch "iPhone 15 Pro" com.tokyonasu.CameraAddressApp -SCREENSHOT_MODE
+        sleep 6
+        xcrun simctl io "iPhone 15 Pro" screenshot screenshots/iphone61_ja_1.png
+        # Simulate a second state (just re-screenshot for slot 2,3)
+        sleep 2
+        xcrun simctl io "iPhone 15 Pro" screenshot screenshots/iphone61_ja_2.png
+        xcrun simctl io "iPhone 15 Pro" screenshot screenshots/iphone61_ja_3.png
+        xcrun simctl shutdown "iPhone 15 Pro"
+
+    - name: Take 6.7-inch screenshots (iPhone 15 Pro Max)
+      run: |
+        xcrun simctl boot "iPhone 15 Pro Max" || true
+        sleep 3
+        xcrun simctl ui "iPhone 15 Pro Max" appearance light
+        xcrun simctl install "iPhone 15 Pro Max" build/derived/Build/Products/Debug-iphonesimulator/CameraAddressApp.app
+        xcrun simctl launch "iPhone 15 Pro Max" com.tokyonasu.CameraAddressApp -SCREENSHOT_MODE
+        sleep 6
+        xcrun simctl io "iPhone 15 Pro Max" screenshot screenshots/iphone67_ja_1.png
+        sleep 2
+        xcrun simctl io "iPhone 15 Pro Max" screenshot screenshots/iphone67_ja_2.png
+        xcrun simctl io "iPhone 15 Pro Max" screenshot screenshots/iphone67_ja_3.png
+        xcrun simctl shutdown "iPhone 15 Pro Max"
+
+    - name: Copy screenshots for EN locale
+      run: |
+        cp screenshots/iphone61_ja_1.png screenshots/iphone61_en_1.png
+        cp screenshots/iphone61_ja_2.png screenshots/iphone61_en_2.png
+        cp screenshots/iphone61_ja_3.png screenshots/iphone61_en_3.png
+        cp screenshots/iphone67_ja_1.png screenshots/iphone67_en_1.png
+        cp screenshots/iphone67_ja_2.png screenshots/iphone67_en_2.png
+        cp screenshots/iphone67_ja_3.png screenshots/iphone67_en_3.png
+
+    - name: Install PyJWT
+      run: pip3 install --break-system-packages PyJWT requests
+
+    - name: Set up ASC API Key
+      env:
+        ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+      run: |
+        mkdir -p ~/.appstoreconnect/private_keys
+        echo "$ASC_API_KEY_CONTENT" | base64 -D > /tmp/asc_key.p8
+
+    - name: Upload screenshots to ASC
+      run: python3 upload_screenshots.py
+      env:
+        ASC_KEY_PATH: /tmp/asc_key.p8

@@ -7,6 +7,10 @@ struct ContentView: View {
     @State private var showSaved = false
     @State private var showLastPhoto = false
 
+    private var isScreenshotMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("-SCREENSHOT_MODE")
+    }
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -14,28 +18,35 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 // Camera preview
                 ZStack(alignment: .bottom) {
-                    CameraPreview(session: camera.session)
-                        .ignoresSafeArea(edges: .top)
+                    if isScreenshotMode {
+                        Image("DemoStreet")
+                            .resizable()
+                            .scaledToFill()
+                            .ignoresSafeArea(edges: .top)
+                    } else {
+                        CameraPreview(session: camera.session)
+                            .ignoresSafeArea(edges: .top)
+                    }
 
                     // Address overlay
                     VStack(alignment: .leading, spacing: 4) {
-                        if !location.postalCode.isEmpty {
-                            Text("\u{3012}\(location.postalCode)")
+                        if !displayPostalCode.isEmpty {
+                            Text("\u{3012}\(displayPostalCode)")
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.85))
                         }
 
-                        if !location.address.isEmpty {
-                            Text(location.address)
+                        if !displayAddress.isEmpty {
+                            Text(displayAddress)
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.white)
                         }
 
-                        if !location.landmark.isEmpty {
+                        if !displayLandmark.isEmpty {
                             HStack(spacing: 4) {
                                 Image(systemName: landmarkIcon)
                                     .font(.caption)
-                                Text(location.landmark)
+                                Text(displayLandmark)
                                     .font(.system(size: 15, weight: .semibold))
                             }
                             .foregroundColor(.yellow)
@@ -120,7 +131,7 @@ struct ContentView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .onAppear { camera.start() }
+        .onAppear { if !isScreenshotMode { camera.start() } }
         .fullScreenCover(isPresented: $showLastPhoto) {
             if let photo = camera.lastPhoto {
                 PhotoPreviewView(image: photo) {
@@ -130,8 +141,18 @@ struct ContentView: View {
         }
     }
 
+    private var displayPostalCode: String {
+        isScreenshotMode ? "150-0042" : location.postalCode
+    }
+    private var displayAddress: String {
+        isScreenshotMode ? "東京都渋谷区宇田川町21-6" : location.address
+    }
+    private var displayLandmark: String {
+        isScreenshotMode ? "渋谷駅 (280m)" : location.landmark
+    }
+
     private var landmarkIcon: String {
-        let lm = location.landmark
+        let lm = displayLandmark
         if lm.contains("駅") || lm.contains("Station") { return "tram.fill" }
         if lm.contains("公園") || lm.contains("Park") { return "leaf.fill" }
         if lm.contains("病院") || lm.contains("Hospital") { return "cross.case.fill" }
