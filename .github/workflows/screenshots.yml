@@ -22,44 +22,56 @@ jobs:
     - name: Generate Xcode project
       run: xcodegen generate
 
-    - name: Build for Simulator (iPhone 15 Pro)
+    - name: Find available simulators
+      run: |
+        echo "=== Available iPhone simulators ==="
+        xcrun simctl list devices available | grep -i "iphone"
+        # Pick 6.1-inch and 6.7-inch devices
+        SIM61=$(xcrun simctl list devices available | grep -oE "iPhone (16 Pro|15 Pro|16) " | head -1 | xargs)
+        SIM67=$(xcrun simctl list devices available | grep -oE "iPhone (16 Pro Max|15 Pro Max|16 Plus)" | head -1 | xargs)
+        if [ -z "$SIM61" ]; then SIM61=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/^[[:space:]]*//' | cut -d'(' -f1 | xargs); fi
+        if [ -z "$SIM67" ]; then SIM67="$SIM61"; fi
+        echo "SIM61=$SIM61" >> $GITHUB_ENV
+        echo "SIM67=$SIM67" >> $GITHUB_ENV
+        echo "Using 6.1-inch: $SIM61"
+        echo "Using 6.7-inch: $SIM67"
+
+    - name: Build for Simulator
       run: |
         xcodebuild build \
           -scheme CameraAddressApp \
           -configuration Debug \
-          -destination "platform=iOS Simulator,name=iPhone 15 Pro" \
+          -destination "platform=iOS Simulator,name=$SIM61" \
           -derivedDataPath build/derived \
           CODE_SIGNING_ALLOWED=NO
 
-    - name: Take 6.1-inch screenshots (iPhone 15 Pro)
+    - name: Take 6.1-inch screenshots
       run: |
-        xcrun simctl boot "iPhone 15 Pro" || true
+        xcrun simctl boot "$SIM61" || true
         sleep 3
-        # Set appearance to light mode
-        xcrun simctl ui "iPhone 15 Pro" appearance light
-        xcrun simctl install "iPhone 15 Pro" build/derived/Build/Products/Debug-iphonesimulator/CameraAddressApp.app
-        xcrun simctl launch "iPhone 15 Pro" com.tokyonasu.CameraAddressApp -SCREENSHOT_MODE
+        xcrun simctl ui "$SIM61" appearance light
+        xcrun simctl install "$SIM61" build/derived/Build/Products/Debug-iphonesimulator/CameraAddressApp.app
+        xcrun simctl launch "$SIM61" com.tokyonasu.CameraAddressApp -SCREENSHOT_MODE
         sleep 6
-        xcrun simctl io "iPhone 15 Pro" screenshot screenshots/iphone61_ja_1.png
-        # Simulate a second state (just re-screenshot for slot 2,3)
+        xcrun simctl io "$SIM61" screenshot screenshots/iphone61_ja_1.png
         sleep 2
-        xcrun simctl io "iPhone 15 Pro" screenshot screenshots/iphone61_ja_2.png
-        xcrun simctl io "iPhone 15 Pro" screenshot screenshots/iphone61_ja_3.png
-        xcrun simctl shutdown "iPhone 15 Pro"
+        xcrun simctl io "$SIM61" screenshot screenshots/iphone61_ja_2.png
+        xcrun simctl io "$SIM61" screenshot screenshots/iphone61_ja_3.png
+        xcrun simctl shutdown "$SIM61"
 
-    - name: Take 6.7-inch screenshots (iPhone 15 Pro Max)
+    - name: Take 6.7-inch screenshots
       run: |
-        xcrun simctl boot "iPhone 15 Pro Max" || true
+        xcrun simctl boot "$SIM67" || true
         sleep 3
-        xcrun simctl ui "iPhone 15 Pro Max" appearance light
-        xcrun simctl install "iPhone 15 Pro Max" build/derived/Build/Products/Debug-iphonesimulator/CameraAddressApp.app
-        xcrun simctl launch "iPhone 15 Pro Max" com.tokyonasu.CameraAddressApp -SCREENSHOT_MODE
+        xcrun simctl ui "$SIM67" appearance light
+        xcrun simctl install "$SIM67" build/derived/Build/Products/Debug-iphonesimulator/CameraAddressApp.app
+        xcrun simctl launch "$SIM67" com.tokyonasu.CameraAddressApp -SCREENSHOT_MODE
         sleep 6
-        xcrun simctl io "iPhone 15 Pro Max" screenshot screenshots/iphone67_ja_1.png
+        xcrun simctl io "$SIM67" screenshot screenshots/iphone67_ja_1.png
         sleep 2
-        xcrun simctl io "iPhone 15 Pro Max" screenshot screenshots/iphone67_ja_2.png
-        xcrun simctl io "iPhone 15 Pro Max" screenshot screenshots/iphone67_ja_3.png
-        xcrun simctl shutdown "iPhone 15 Pro Max"
+        xcrun simctl io "$SIM67" screenshot screenshots/iphone67_ja_2.png
+        xcrun simctl io "$SIM67" screenshot screenshots/iphone67_ja_3.png
+        xcrun simctl shutdown "$SIM67"
 
     - name: Copy screenshots for EN locale
       run: |
