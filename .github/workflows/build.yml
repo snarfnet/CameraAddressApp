@@ -106,6 +106,7 @@ jobs:
       run: |
         mkdir -p ~/.appstoreconnect/private_keys
         echo "$ASC_API_KEY_CONTENT" | base64 -D > ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8
+        cp ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8 /tmp/asc_key.p8
 
     - name: Build Archive
       run: |
