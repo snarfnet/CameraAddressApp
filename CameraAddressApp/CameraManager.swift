@@ -68,50 +68,85 @@ extension CameraManager {
             image.draw(at: .zero)
 
             let scale = size.width / 390.0
-            let padding = 16.0 * scale
-            let fontSize = 18.0 * scale
-            let smallFontSize = 14.0 * scale
+            let outerPadding = 18.0 * scale
+            let innerPadding = 14.0 * scale
+            let cardWidth = size.width - outerPadding * 2
+            let titleFontSize = 12.0 * scale
+            let addressFontSize = 18.0 * scale
+            let metaFontSize = 13.0 * scale
+            let lineGap = 7.0 * scale
 
-            let shadow = NSShadow()
-            shadow.shadowColor = UIColor.black.withAlphaComponent(0.8)
-            shadow.shadowBlurRadius = 4 * scale
-            shadow.shadowOffset = CGSize(width: 1 * scale, height: 1 * scale)
-
-            let mainAttrs: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: fontSize),
-                .foregroundColor: UIColor.white,
-                .shadow: shadow
+            let titleAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: titleFontSize, weight: .black),
+                .foregroundColor: UIColor(red: 0.42, green: 0.91, blue: 0.98, alpha: 1)
             ]
-            let smallAttrs: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: smallFontSize),
-                .foregroundColor: UIColor.white.withAlphaComponent(0.9),
-                .shadow: shadow
+            let addressAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: addressFontSize, weight: .heavy),
+                .foregroundColor: UIColor.white
+            ]
+            let metaAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: metaFontSize, weight: .bold),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.84)
+            ]
+            let landmarkAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: metaFontSize, weight: .bold),
+                .foregroundColor: UIColor(red: 0.99, green: 0.9, blue: 0.54, alpha: 1)
             ]
 
-            var y = size.height - padding
+            let addressText = address.isEmpty ? "住所を取得できませんでした" : address
+            let maxTextWidth = cardWidth - innerPadding * 2
+            let addressRect = NSString(string: addressText).boundingRect(
+                with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: addressAttrs,
+                context: nil
+            )
+            let landmarkHeight = landmark.isEmpty ? 0 : 20.0 * scale
+            let metaHeight = postalCode.isEmpty ? 0 : 18.0 * scale
+            let cardHeight = innerPadding * 2 + 16.0 * scale + lineGap + ceil(addressRect.height) + landmarkHeight + metaHeight + lineGap * 2
+            let cardRect = CGRect(
+                x: outerPadding,
+                y: size.height - outerPadding - cardHeight,
+                width: cardWidth,
+                height: cardHeight
+            )
 
-            // Landmark
-            if !landmark.isEmpty {
-                let landmarkStr = NSString(string: landmark)
-                let landmarkSize = landmarkStr.size(withAttributes: mainAttrs)
-                y -= landmarkSize.height
-                landmarkStr.draw(at: CGPoint(x: padding, y: y), withAttributes: mainAttrs)
-                y -= 4 * scale
+            let path = UIBezierPath(roundedRect: cardRect, cornerRadius: 22.0 * scale)
+            UIColor.black.withAlphaComponent(0.58).setFill()
+            path.fill()
+            UIColor.white.withAlphaComponent(0.18).setStroke()
+            path.lineWidth = 1.0 * scale
+            path.stroke()
+
+            var y = cardRect.minY + innerPadding
+            NSString(string: "ADDRESS STAMP").draw(
+                at: CGPoint(x: cardRect.minX + innerPadding, y: y),
+                withAttributes: titleAttrs
+            )
+
+            if !postalCode.isEmpty {
+                let postal = NSString(string: "〒\(postalCode)")
+                let postalSize = postal.size(withAttributes: metaAttrs)
+                postal.draw(
+                    at: CGPoint(x: cardRect.maxX - innerPadding - postalSize.width, y: y),
+                    withAttributes: metaAttrs
+                )
             }
 
-            // Address
-            let addrStr = NSString(string: address)
-            let addrSize = addrStr.size(withAttributes: mainAttrs)
-            y -= addrSize.height
-            addrStr.draw(at: CGPoint(x: padding, y: y), withAttributes: mainAttrs)
+            y += 16.0 * scale + lineGap
+            NSString(string: addressText).draw(
+                with: CGRect(x: cardRect.minX + innerPadding, y: y, width: maxTextWidth, height: ceil(addressRect.height)),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: addressAttrs,
+                context: nil
+            )
+            y += ceil(addressRect.height) + lineGap
 
-            // Postal code
-            if !postalCode.isEmpty {
-                y -= 4 * scale
-                let pcStr = NSString(string: "〒\(postalCode)")
-                let pcSize = pcStr.size(withAttributes: smallAttrs)
-                y -= pcSize.height
-                pcStr.draw(at: CGPoint(x: padding, y: y), withAttributes: smallAttrs)
+            if !landmark.isEmpty {
+                NSString(string: landmark).draw(
+                    at: CGPoint(x: cardRect.minX + innerPadding, y: y),
+                    withAttributes: landmarkAttrs
+                )
             }
         }
 

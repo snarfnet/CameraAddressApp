@@ -71,7 +71,7 @@ if not version_id or version_state in ('READY_FOR_DISTRIBUTION',):
     r = api('POST', '/appStoreVersions', json={
         'data': {
             'type': 'appStoreVersions',
-            'attributes': {'platform': 'IOS', 'versionString': '1.0'},
+            'attributes': {'platform': 'IOS', 'versionString': '1.1'},
             'relationships': {'app': {'data': {'type': 'apps', 'id': APP_ID}}}
         }
     })
@@ -87,6 +87,18 @@ print(f'Version ID: {version_id} state={version_state}')
 r = api('PATCH', f'/appStoreVersions/{version_id}/relationships/build',
     json={'data': {'type': 'builds', 'id': build_id}})
 print(f'Build assigned: {r.status_code}')
+
+# Set marketing URL on all localizations
+r = api('GET', f'/appStoreVersions/{version_id}/appStoreVersionLocalizations')
+if r.status_code == 200:
+    for loc in r.json().get('data', []):
+        loc_id = loc['id']
+        locale = loc['attributes']['locale']
+        lr = api('PATCH', f'/appStoreVersionLocalizations/{loc_id}', json={
+            'data': {'type': 'appStoreVersionLocalizations', 'id': loc_id,
+                     'attributes': {'marketingUrl': 'https://snarfnet.github.io/'}}
+        })
+        print(f'Marketing URL for {locale}: {lr.status_code}')
 
 # Cancel any blocking reviewSubmissions
 canceled_any = False

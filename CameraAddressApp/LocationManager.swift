@@ -1,5 +1,6 @@
 import CoreLocation
 import Combine
+import Foundation
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
@@ -112,7 +113,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     switch best.type {
                     case "station":
                         let distM = Int(best.dist)
-                        suffix = distM < 100 ? "\(best.name)駅" : "\(best.name)駅 約\(distM)m"
+                        suffix = distM < 100 ? "\(best.name)駅 すぐ近く" : "\(best.name)駅 約\(distM)m"
                     case "park":
                         suffix = "\(best.name)"
                     default:
