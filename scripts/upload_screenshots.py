@@ -61,7 +61,8 @@ def get_version_id():
             'IN_REVIEW',
         ):
             return item['id'], state
-    return data[0]['id'], data[0]['attributes']['appStoreState']
+    # No editable version found — don't fall back to non-editable states
+    return None, None
 
 
 def get_localizations(version_id):

@@ -4,6 +4,7 @@ KEY_ID = 'WDXGY9WX55'
 ISSUER = '2be0734f-943a-4d61-9dc9-5d9045c46fec'
 APP_ID = '6764717589'
 BUILD_NUMBER = sys.argv[1]
+PREPARE_ONLY = '--prepare-only' in sys.argv
 
 p8 = open('/tmp/asc_key.p8').read()
 
@@ -66,7 +67,7 @@ if version_state in ('WAITING_FOR_REVIEW', 'IN_REVIEW'):
     print(f'Already in review ({version_state}). Nothing to do.')
     sys.exit(0)
 
-if not version_id or version_state in ('READY_FOR_DISTRIBUTION',):
+if not version_id or version_state in ('READY_FOR_DISTRIBUTION', 'PENDING_DEVELOPER_RELEASE'):
     print('Creating new version...')
     r = api('POST', '/appStoreVersions', json={
         'data': {
@@ -99,6 +100,10 @@ if r.status_code == 200:
                      'attributes': {'marketingUrl': 'https://snarfnet.github.io/'}}
         })
         print(f'Marketing URL for {locale}: {lr.status_code}')
+
+if PREPARE_ONLY:
+    print('Prepare-only mode: version created and build assigned. Exiting.')
+    sys.exit(0)
 
 # Cancel any blocking reviewSubmissions
 canceled_any = False
