@@ -77,6 +77,7 @@ struct ContentView: View {
             Image("DemoStreet")
                 .resizable()
                 .scaledToFill()
+                .overlay(Color.black.opacity(0.08))
                 .ignoresSafeArea()
         } else {
             CameraPreview(session: camera.session)
@@ -86,11 +87,16 @@ struct ContentView: View {
 
     private var topHud: some View {
         HStack(spacing: 10) {
-            HudPill(icon: "location.fill", title: displayAddress.isEmpty ? "住所取得中" : "GPS住所", subtitle: displayPostalCode.isEmpty ? "測位中" : "〒\(displayPostalCode)", tint: Color(hex: "38BDF8"))
+            HudPill(
+                icon: "location.fill",
+                title: displayAddress.isEmpty ? "位置情報を取得中" : "緊急時の位置記録",
+                subtitle: displayPostalCode.isEmpty ? "住所を確認しています" : "〒\(displayPostalCode)",
+                tint: Color(hex: "5EEAD4")
+            )
 
             Spacer()
 
-            HudIconButton(systemName: "scope", tint: Color(hex: "A7F3D0"))
+            HudIconButton(systemName: "scope", tint: Color(hex: "FDE68A"))
         }
     }
 
@@ -116,20 +122,20 @@ struct ContentView: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.white, Color(hex: "DFF7FF")],
+                                colors: [Color.white, Color(hex: "D7FFF4")],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 82, height: 82)
-                        .shadow(color: Color(hex: "38BDF8").opacity(0.45), radius: 18, y: 8)
+                        .shadow(color: Color(hex: "5EEAD4").opacity(0.44), radius: 22, y: 10)
 
                     Circle()
                         .stroke(Color.white.opacity(0.95), lineWidth: 4)
                         .frame(width: 94, height: 94)
 
                     Circle()
-                        .fill(Color(hex: "0F172A"))
+                        .fill(Color(hex: "101820"))
                         .frame(width: shutterPressed ? 38 : 44, height: shutterPressed ? 38 : 44)
                         .overlay(
                             Image(systemName: "camera.fill")
@@ -145,12 +151,12 @@ struct ContentView: View {
             Spacer()
 
             VStack(spacing: 5) {
-                Image(systemName: "text.viewfinder")
+                Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 21, weight: .bold))
-                Text("焼き込み")
+                Text("記録")
                     .font(.caption2.weight(.bold))
             }
-            .foregroundStyle(.white.opacity(0.9))
+            .foregroundStyle(.white.opacity(0.92))
             .frame(width: 62, height: 62)
             .background(.black.opacity(0.34), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
@@ -160,23 +166,23 @@ struct ContentView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .background(.black.opacity(0.42), in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .background(.black.opacity(0.46), in: RoundedRectangle(cornerRadius: 30, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .stroke(.white.opacity(0.16), lineWidth: 1)
+                .stroke(.white.opacity(0.18), lineWidth: 1)
         )
     }
 
     private var displayPostalCode: String {
-        isScreenshotMode ? "150-0042" : location.postalCode
+        isScreenshotMode ? "163-8001" : location.postalCode
     }
 
     private var displayAddress: String {
-        isScreenshotMode ? "東京都渋谷区宇田川町21-6" : location.address
+        isScreenshotMode ? "東京都新宿区西新宿2-8-1" : location.address
     }
 
     private var displayLandmark: String {
-        isScreenshotMode ? "渋谷駅 約280m" : location.landmark
+        isScreenshotMode ? "都庁前駅まで約120m" : location.landmark
     }
 
     private var landmarkIcon: String {
@@ -241,7 +247,7 @@ private struct AddressPlate: View {
             HStack(spacing: 8) {
                 Image(systemName: "mappin.and.ellipse")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(Color(hex: "67E8F9"))
+                    .foregroundStyle(Color(hex: "5EEAD4"))
                 Text("ADDRESS STAMP")
                     .font(.caption.weight(.black))
                     .foregroundStyle(.white.opacity(0.72))
@@ -249,7 +255,7 @@ private struct AddressPlate: View {
                 if !postalCode.isEmpty {
                     Text("〒\(postalCode)")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(.white.opacity(0.8))
+                        .foregroundStyle(.white.opacity(0.82))
                 }
             }
 
@@ -277,7 +283,7 @@ private struct AddressPlate: View {
         .padding(16)
         .background(
             LinearGradient(
-                colors: [Color.black.opacity(0.58), Color(hex: "082F49").opacity(0.46)],
+                colors: [Color.black.opacity(0.64), Color(hex: "12312E").opacity(0.54)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
@@ -316,7 +322,7 @@ private struct HudPill: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(.black.opacity(0.38), in: Capsule())
+        .background(.black.opacity(0.40), in: Capsule())
         .overlay(Capsule().stroke(.white.opacity(0.14), lineWidth: 1))
     }
 }
@@ -330,7 +336,7 @@ private struct HudIconButton: View {
             .font(.system(size: 17, weight: .black))
             .foregroundStyle(tint)
             .frame(width: 46, height: 46)
-            .background(.black.opacity(0.38), in: Circle())
+            .background(.black.opacity(0.40), in: Circle())
             .overlay(Circle().stroke(.white.opacity(0.14), lineWidth: 1))
     }
 }
@@ -373,7 +379,7 @@ private struct SavedToast: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("保存しました")
                         .font(.headline.weight(.heavy))
-                    Text("住所付きでフォトライブラリに保存しました")
+                    Text("住所スタンプ付きでフォトライブラリに保存しました")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.72))
                 }
@@ -400,7 +406,7 @@ private struct ViewfinderOverlay: View {
             let height = proxy.size.height
 
             ZStack {
-                LinearGradient(colors: [.black.opacity(0.46), .clear, .black.opacity(0.52)], startPoint: .top, endPoint: .bottom)
+                LinearGradient(colors: [.black.opacity(0.42), .clear, .black.opacity(0.54)], startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
 
                 Path { path in

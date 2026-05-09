@@ -85,8 +85,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 guard let tags = el["tags"] as? [String: String],
                       let name = tags["name"] ?? tags["name:ja"] else { continue }
 
-                var elLat: Double
-                var elLon: Double
+                let elLat: Double
+                let elLon: Double
                 if let center = el["center"] as? [String: Double] {
                     elLat = center["lat"] ?? 0
                     elLon = center["lon"] ?? 0
@@ -113,7 +113,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     switch best.type {
                     case "station":
                         let distM = Int(best.dist)
-                        suffix = distM < 100 ? "\(best.name)駅 すぐ近く" : "\(best.name)駅 約\(distM)m"
+                        suffix = distM < 100 ? "\(best.name)駅の近く" : "\(best.name)駅まで約\(distM)m"
                     case "park":
                         suffix = "\(best.name)"
                     default:

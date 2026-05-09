@@ -18,7 +18,7 @@ struct PhotoPreviewView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("PREVIEW")
                             .font(.caption.weight(.black))
-                            .foregroundStyle(Color(hex: "67E8F9"))
+                            .foregroundStyle(Color(hex: "5EEAD4"))
                         Text("保存した写真")
                             .font(.headline.weight(.heavy))
                             .foregroundStyle(.white)

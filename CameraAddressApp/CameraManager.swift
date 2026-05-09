@@ -59,12 +59,11 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
     }
 }
 
-// Save image with overlay text
 extension CameraManager {
     static func saveWithOverlay(image: UIImage, address: String, landmark: String, postalCode: String) {
         let size = image.size
         let renderer = UIGraphicsImageRenderer(size: size)
-        let result = renderer.image { ctx in
+        let result = renderer.image { _ in
             image.draw(at: .zero)
 
             let scale = size.width / 390.0
@@ -78,7 +77,7 @@ extension CameraManager {
 
             let titleAttrs: [NSAttributedString.Key: Any] = [
                 .font: UIFont.systemFont(ofSize: titleFontSize, weight: .black),
-                .foregroundColor: UIColor(red: 0.42, green: 0.91, blue: 0.98, alpha: 1)
+                .foregroundColor: UIColor(red: 0.37, green: 0.92, blue: 0.83, alpha: 1)
             ]
             let addressAttrs: [NSAttributedString.Key: Any] = [
                 .font: UIFont.systemFont(ofSize: addressFontSize, weight: .heavy),
@@ -112,7 +111,7 @@ extension CameraManager {
             )
 
             let path = UIBezierPath(roundedRect: cardRect, cornerRadius: 22.0 * scale)
-            UIColor.black.withAlphaComponent(0.58).setFill()
+            UIColor.black.withAlphaComponent(0.62).setFill()
             path.fill()
             UIColor.white.withAlphaComponent(0.18).setStroke()
             path.lineWidth = 1.0 * scale
@@ -153,8 +152,11 @@ extension CameraManager {
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             guard status == .authorized || status == .limited else { return }
             PHPhotoLibrary.shared().performChanges {
-                PHAssetCreationRequest.forAsset().addResource(with: .photo,
-                    data: result.jpegData(compressionQuality: 0.9)!, options: nil)
+                PHAssetCreationRequest.forAsset().addResource(
+                    with: .photo,
+                    data: result.jpegData(compressionQuality: 0.9)!,
+                    options: nil
+                )
             }
         }
     }
