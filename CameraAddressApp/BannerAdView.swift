@@ -2,20 +2,41 @@ import SwiftUI
 import GoogleMobileAds
 
 struct BannerAdView: UIViewRepresentable {
-    let adUnitID: String
+    var adUnitID = "ca-app-pub-9404799280370656/7882448349"
 
-    func makeUIView(context: Context) -> GADBannerView {
-        let banner = GADBannerView(adSize: GADAdSizeBanner)
-        banner.adUnitID = adUnitID
-        return banner
+    func makeUIView(context: Context) -> AdBannerContainer {
+        let container = AdBannerContainer(adUnitID: adUnitID)
+        return container
     }
 
-    func updateUIView(_ uiView: GADBannerView, context: Context) {
-        if uiView.rootViewController == nil,
-           let windowScene = uiView.window?.windowScene,
-           let root = windowScene.windows.first?.rootViewController {
-            uiView.rootViewController = root
-            uiView.load(GADRequest())
+    func updateUIView(_ uiView: AdBannerContainer, context: Context) {}
+}
+
+class AdBannerContainer: UIView {
+    private let banner: BannerView
+    private var adLoaded = false
+
+    init(adUnitID: String) {
+        banner = BannerView(adSize: AdSizeBanner)
+        banner.adUnitID = adUnitID
+        super.init(frame: .zero)
+        addSubview(banner)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard !adLoaded, let window else { return }
+        if let rootVC = window.windowScene?.keyWindow?.rootViewController {
+            banner.rootViewController = rootVC
+            banner.load(Request())
+            adLoaded = true
         }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        banner.frame = bounds
     }
 }
