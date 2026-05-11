@@ -13,11 +13,11 @@ struct BannerAdView: UIViewRepresentable {
 }
 
 class AdBannerContainer: UIView {
-    private let banner: BannerView
+    private let banner: GADBannerView
     private var adLoaded = false
 
     init(adUnitID: String) {
-        banner = BannerView(adSize: AdSizeBanner)
+        banner = GADBannerView(adSize: GADAdSizeBanner)
         banner.adUnitID = adUnitID
         super.init(frame: .zero)
         addSubview(banner)
@@ -30,7 +30,7 @@ class AdBannerContainer: UIView {
         guard !adLoaded, let window else { return }
         if let rootVC = window.windowScene?.keyWindow?.rootViewController {
             banner.rootViewController = rootVC
-            banner.load(Request())
+            banner.load(GADRequest())
             adLoaded = true
         }
     }

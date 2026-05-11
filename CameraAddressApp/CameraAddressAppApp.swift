@@ -8,7 +8,7 @@ struct CameraAddressAppApp: App {
         WindowGroup {
             ContentView()
                 .onAppear {
-                    MobileAds.shared.start(completionHandler: nil)
+                    GADMobileAds.sharedInstance().start(completionHandler: nil)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
