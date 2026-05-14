@@ -178,19 +178,31 @@ if PREPARE_ONLY:
     print('Prepare-only mode: version created and build assigned. Exiting.')
     sys.exit(0)
 
-for state_filter in ['UNRESOLVED_ISSUES', 'READY_FOR_REVIEW']:
-    r = api('GET', f'/apps/{APP_ID}/reviewSubmissions?filter[state]={state_filter}')
-    require_ok(r, f'Fetch review submissions {state_filter}')
-    for sub in r.json().get('data', []):
-        sid = sub['id']
-        st = sub['attributes']['state']
-        cr = api('PATCH', f'/reviewSubmissions/{sid}', json={
-            'data': {'type': 'reviewSubmissions', 'id': sid, 'attributes': {'canceled': True}}
-        })
-        if cr.status_code in (200, 204, 409):
-            print(f'Cancel {sid} state={st}: {cr.status_code}')
-        else:
-            require_ok(cr, f'Cancel {sid}')
+def cancel_blocking_submissions():
+    canceled = False
+    for state_filter in ['UNRESOLVED_ISSUES', 'READY_FOR_REVIEW', 'WAITING_FOR_REVIEW', 'IN_REVIEW', 'COMPLETING']:
+        r = api('GET', f'/apps/{APP_ID}/reviewSubmissions?filter[state]={state_filter}')
+        require_ok(r, f'Fetch review submissions {state_filter}')
+        for sub in r.json().get('data', []):
+            sid = sub['id']
+            st = sub['attributes']['state']
+            cr = api('PATCH', f'/reviewSubmissions/{sid}', json={
+                'data': {'type': 'reviewSubmissions', 'id': sid, 'attributes': {'canceled': True}}
+            })
+            if cr.status_code in (200, 204, 409):
+                print(f'Cancel {sid} state={st}: {cr.status_code}')
+                canceled = True
+            else:
+                require_ok(cr, f'Cancel {sid}')
+    return canceled
+
+
+if cancel_blocking_submissions():
+    print('Waiting for review submission cancellations to propagate...')
+    for i in range(6):
+        time.sleep(20)
+        if not cancel_blocking_submissions():
+            break
 
 submission_id = None
 for attempt in range(5):
