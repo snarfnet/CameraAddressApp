@@ -48,7 +48,7 @@ def api(method, path, **kwargs):
 
 def require_ok(response, label, ok_statuses=(200, 201, 204)):
     if response.status_code not in ok_statuses:
-        print(f'{label} failed: {response.status_code} {response.text[:500]}')
+        print(f'{label} failed: {response.status_code} {response.text[:4000]}')
         sys.exit(1)
     print(f'{label}: {response.status_code}')
     return response
@@ -129,14 +129,18 @@ require_ok(r, 'Fetch localizations')
 for loc in r.json().get('data', []):
     loc_id = loc['id']
     locale = loc['attributes']['locale']
+    whats_new = 'Improved ad loading reliability.' if locale == 'en-US' else '広告表示の安定性を改善しました。'
     lr = api('PATCH', f'/appStoreVersionLocalizations/{loc_id}', json={
         'data': {'type': 'appStoreVersionLocalizations', 'id': loc_id,
-                 'attributes': {'marketingUrl': 'https://snarfnet.github.io/'}}
+                 'attributes': {
+                     'marketingUrl': 'https://snarfnet.github.io/',
+                     'whatsNew': whats_new,
+                 }}
     })
     if lr.status_code in (200, 204, 409):
-        print(f'Marketing URL for {locale}: {lr.status_code}')
+        print(f'Localization metadata for {locale}: {lr.status_code}')
     else:
-        require_ok(lr, f'Marketing URL for {locale}')
+        require_ok(lr, f'Localization metadata for {locale}')
 
 if PREPARE_ONLY:
     print('Prepare-only mode: version created and build assigned. Exiting.')
