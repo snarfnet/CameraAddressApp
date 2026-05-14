@@ -129,7 +129,7 @@ require_ok(r, 'Fetch localizations')
 for loc in r.json().get('data', []):
     loc_id = loc['id']
     locale = loc['attributes']['locale']
-    whats_new = 'Improved ad loading reliability.' if locale == 'en-US' else '広告表示の安定性を改善しました。'
+    whats_new = 'The App Tracking Transparency request now appears before the camera and ads start.' if locale == 'en-US' else 'カメラと広告の開始前にApp Tracking Transparencyの許可確認が表示されるようにしました。'
     lr = api('PATCH', f'/appStoreVersionLocalizations/{loc_id}', json={
         'data': {'type': 'appStoreVersionLocalizations', 'id': loc_id,
                  'attributes': {
@@ -141,6 +141,38 @@ for loc in r.json().get('data', []):
         print(f'Localization metadata for {locale}: {lr.status_code}')
     else:
         require_ok(lr, f'Localization metadata for {locale}')
+
+r = api('GET', f'/appStoreVersions/{version_id}/appStoreReviewDetail')
+require_ok(r, 'Fetch review detail')
+review_attrs = {
+    'contactFirstName': 'Tokyo',
+    'contactLastName': 'Nasu',
+    'contactEmail': 'tokyonasu@yahoo.co.jp',
+    'contactPhone': '+81 80-2368-9194',
+    'demoAccountRequired': False,
+    'demoAccountName': '',
+    'demoAccountPassword': '',
+    'notes': (
+        'This build shows the App Tracking Transparency request on first launch before the camera view, '
+        'location access, and Google Mobile Ads initialization. After the ATT flow completes, the app opens '
+        'the camera screen and starts ads.'
+    ),
+}
+if r.json().get('data'):
+    detail_id = r.json()['data']['id']
+    dr = api('PATCH', f'/appStoreReviewDetails/{detail_id}', json={
+        'data': {'type': 'appStoreReviewDetails', 'id': detail_id, 'attributes': review_attrs}
+    })
+    require_ok(dr, 'Update review detail')
+else:
+    dr = api('POST', '/appStoreReviewDetails', json={
+        'data': {
+            'type': 'appStoreReviewDetails',
+            'attributes': review_attrs,
+            'relationships': {'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': version_id}}},
+        }
+    })
+    require_ok(dr, 'Create review detail')
 
 if PREPARE_ONLY:
     print('Prepare-only mode: version created and build assigned. Exiting.')
