@@ -57,6 +57,8 @@ def get_version_id():
             'DEVELOPER_REJECTED',
             'REJECTED',
             'METADATA_REJECTED',
+            'READY_FOR_REVIEW',
+            'UNRESOLVED_ISSUES',
             'WAITING_FOR_REVIEW',
             'IN_REVIEW',
         ):
@@ -171,13 +173,13 @@ print(f'=== CameraAddressApp ({APP_ID}) ===')
 version_id, state = get_version_id()
 if not version_id:
     print('No editable version found')
-    exit(0)
+    exit(1)
 print(f'Version: {version_id} ({state})')
 
 localizations = get_localizations(version_id)
 if not localizations:
     print('No localization')
-    exit(0)
+    exit(1)
 
 for lang, config in SCREENSHOTS.items():
     loc_id = localizations.get(config['locale'])
